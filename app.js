@@ -20,9 +20,10 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
+app.use("/images", express.static("public/images"));
+
 app.use("/", indexRouter);
-app.use("/", authorRouter);
-// app.use('/users', usersRouter);
+app.use("/authors", authorRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

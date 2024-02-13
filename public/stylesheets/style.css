@@ -42,6 +42,10 @@ body {
   width: 100%;
 }
 
+#datetime {
+  font-size: 24px;
+}
+
 #header {
   align-items: center;
   display: flex;
@@ -388,4 +392,42 @@ form button {
   form > button.light-button {
     box-shadow: 0 0 5px lightgray;
   }
+}
+
+.authors-links {
+  list-style: none;
+  display: flex;
+  gap: 10px;
+  margin-top: auto;
+  padding: 10px;
+}
+
+.authors-links a {
+  font-size: 24px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.standard-authors-link {
+  color: gray; /* Standard theme text color */
+}
+
+.standard-authors-link:hover {
+  color: white; /* Standard theme text color */
+}
+
+.light-authors-link {
+  color: black; /* Light theme text color */
+}
+
+.light-authors-link:hover {
+  color: gray; /* Light theme text color */
+}
+
+.darker-authors-link {
+  color: gray; /* Darker theme text color */
+}
+
+.darker-authors-link:hover {
+  color: white; /* Darker theme text color */
 }

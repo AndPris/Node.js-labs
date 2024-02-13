@@ -154,25 +154,30 @@ function removeLocalTodos(todo) {
   localStorage.setItem("todos", JSON.stringify(todos));
 }
 
-// Change theme function:
+// Update the changeTheme function
 function changeTheme(color) {
   localStorage.setItem("savedTheme", color);
   savedTheme = localStorage.getItem("savedTheme");
 
   document.body.className = color;
-  // Change blinking cursor for darker theme:
+
+  // Change blinking cursor for darker theme
   color === "darker"
     ? document.getElementById("title").classList.add("darker-title")
     : document.getElementById("title").classList.remove("darker-title");
 
   document.querySelector("input").className = `${color}-input`;
-  // Change todo color without changing their status (completed or not):
+
+  // Change todo color without changing their status (completed or not)
   document.querySelectorAll(".todo").forEach((todo) => {
-    Array.from(todo.classList).some((item) => item === "completed")
-      ? (todo.className = `todo ${color}-todo completed`)
-      : (todo.className = `todo ${color}-todo`);
+    Array.from(todo.classList).some((item) =>
+      item === "completed"
+        ? (todo.className = `todo ${color}-todo completed`)
+        : (todo.className = `todo ${color}-todo`)
+    );
   });
-  // Change buttons color according to their type (todo, check or delete):
+
+  // Change buttons color according to their type (todo, check or delete)
   document.querySelectorAll("button").forEach((button) => {
     Array.from(button.classList).some((item) => {
       if (item === "check-btn") {
@@ -183,5 +188,15 @@ function changeTheme(color) {
         button.className = `todo-btn ${color}-button`;
       }
     });
+  });
+
+  // Change author links color
+  document.querySelectorAll(".author-link").forEach((link) => {
+    link.classList.remove(
+      "standard-authors-link",
+      "light-authors-link",
+      "darker-authors-link"
+    );
+    link.classList.add(`${color}-authors-link`);
   });
 }
