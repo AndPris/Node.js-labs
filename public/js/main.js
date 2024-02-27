@@ -9,8 +9,8 @@ const darkerTheme = document.querySelector(".darker-theme");
 
 // Event Listeners
 
-toDoBtn.addEventListener("click", addToDo);
-toDoList.addEventListener("click", deletecheck);
+if (toDoBtn) toDoBtn.addEventListener("click", addToDo);
+if (toDoList) toDoList.addEventListener("click", deletecheck);
 document.addEventListener("DOMContentLoaded", getTodos);
 standardTheme.addEventListener("click", () => changeTheme("standard"));
 lightTheme.addEventListener("click", () => changeTheme("light"));
@@ -166,7 +166,8 @@ function changeTheme(color) {
     ? document.getElementById("title").classList.add("darker-title")
     : document.getElementById("title").classList.remove("darker-title");
 
-  document.querySelector("input").className = `${color}-input`;
+  input = document.querySelector("input")
+  if (input) input.className = `${color}-input`;
 
   // Change todo color without changing their status (completed or not)
   document.querySelectorAll(".todo").forEach((todo) => {
@@ -198,5 +199,14 @@ function changeTheme(color) {
       "darker-authors-link"
     );
     link.classList.add(`${color}-authors-link`);
+  });
+
+  document.querySelectorAll(".description").forEach((link) => {
+    link.classList.remove(
+      "standard-description",
+      "light-description",
+      "darker-description"
+    );
+    link.classList.add(`${color}-description`);
   });
 }
