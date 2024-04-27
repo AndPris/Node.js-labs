@@ -5,7 +5,6 @@ const {
 } = require("fs");
 const router = express.Router();
 const { Task } = require("../public/js/task");
-const { route } = require(".");
 
 const syncFileName = "todosSync.txt";
 
