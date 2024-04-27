@@ -1,13 +1,12 @@
 section.footer
   ul.authors-links
     li
-      a.author-link(href= (currentPage === '/Andrii' ? '/' : '/authors/Andrii'))=(currentPage === '/Andrii' ? 'Home Page' : 'Andrii')
+      a.author-link.standard-authors-link(href= (currentPage === '/Andrii' ? '/' : '/authors/Andrii'))=(currentPage === '/Andrii' ? 'Home Page' : 'Andrii')
     li
-      a.author-link(href= (currentPage === '/Anton' ? '/' : '/authors/Anton'))=(currentPage === '/Anton' ? 'Home Page' : 'Anton')
+      a.author-link.standard-authors-link(href= (currentPage === '/Anton' ? '/' : '/authors/Anton'))=(currentPage === '/Anton' ? 'Home Page' : 'Anton')
     li
-      a.author-link(href= (currentPage === '/Max' ? '/' : '/authors/Max'))=(currentPage === '/Max' ? 'Home Page' : 'Max')
-
+      a.author-link.standard-authors-link(href= (currentPage === '/Max' ? '/' : '/authors/Max'))=(currentPage === '/Max' ? 'Home Page' : 'Max')
 
   ul.authors-links
     li
-      a.author-link(href='/static') Static HTML page
+      a.author-link.standard-authors-link(href='/static') Static HTML page
