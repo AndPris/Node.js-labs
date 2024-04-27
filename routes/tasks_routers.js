@@ -1,5 +1,8 @@
 const express = require("express");
 const fs = require("fs");
+const {
+    promises: { readFile, writeFile },
+} = require("fs");
 const router = express.Router();
 const { Task } = require("../public/js/task");
 const { route } = require(".");
@@ -38,7 +41,7 @@ router.post("/tasks", (req, res) => {
 router.get("/tasks", (req, res) => {
     fs.readFile(syncFileName, "utf-8", (err, data) => {
         if (err) {
-            console.log(err);
+            console.error(err);
             return;
         }
 
@@ -46,22 +49,38 @@ router.get("/tasks", (req, res) => {
     });
 });
 
+// Async promises
 router.delete("/tasks", (req, res) => {
-    let tasks = JSON.parse(readSync());
+    let tasks = [];
     const creationTimeOfTaskToDelete = new Date(req.body.creationTime);
 
-    tasks = tasks.filter((task) => {
-        let creationTime = new Date(task._creationTime);
-        creationTime.setMilliseconds(0);
-        return creationTime.getTime() !== creationTimeOfTaskToDelete.getTime();
-    });
+    readFile(syncFileName)
+        .then((data) => {
+            tasks = JSON.parse(data);
 
-    fs.writeFileSync(syncFileName, JSON.stringify(tasks));
-    res.json({ redirect: "/" });
+            tasks = tasks.filter((task) => {
+                let creationTime = new Date(task._creationTime);
+                creationTime.setMilliseconds(0);
+                return (
+                    creationTime.getTime() !==
+                    creationTimeOfTaskToDelete.getTime()
+                );
+            });
+
+            return writeFile(syncFileName, JSON.stringify(tasks));
+        })
+        .then(() => {
+            res.json({ redirect: "/" });
+        })
+        .catch((error) => {
+            console.error(error.message);
+            res.status(500).json({ error: "Internal server error" });
+        });
 });
 
-router.patch("/tasks", (req, res) => {
-    let tasks = JSON.parse(readSync());
+// async/await
+router.patch("/tasks", async (req, res) => {
+    let tasks = JSON.parse(await readFile(syncFileName));
     const creationTimeOfTaskToDelete = new Date(req.body.creationTime);
 
     taskIndex = tasks.findIndex((task) => {
@@ -74,7 +93,7 @@ router.patch("/tasks", (req, res) => {
     tasks[taskIndex]._isDone = !tasks[taskIndex]._isDone;
     console.log(tasks[taskIndex]._isDone);
 
-    fs.writeFileSync(syncFileName, JSON.stringify(tasks));
+    await writeFile(syncFileName, JSON.stringify(tasks));
     res.json({ redirect: "/" });
 });
 
