@@ -3,7 +3,7 @@ const express = require("express");
 const path = require("path");
 const cookieParser = require("cookie-parser");
 const logger = require("morgan");
-const multer = require('multer');
+const multer = require("multer");
 
 const indexRouter = require("./routes/index");
 const authorRouter = require("./routes/authors_router");
@@ -30,7 +30,7 @@ app.use("/static", staticHTMLRouter);
 app.use("/", tasksRouter);
 
 app.use(function (req, res, next) {
-  next(createError(404));
+    next(createError(404));
 });
 
 app.use((err, req, res, next) => {

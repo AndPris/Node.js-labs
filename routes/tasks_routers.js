@@ -10,7 +10,7 @@ function saveSync(todo) {
     let todos;
 
     try {
-        todos = JSON.parse(fs.readFileSync(syncFileName));
+        todos = JSON.parse(readSync());
     } catch (err) {
         todos = [];
     }
@@ -19,6 +19,11 @@ function saveSync(todo) {
     fs.writeFileSync(syncFileName, JSON.stringify(todos));
 }
 
+function readSync() {
+    return fs.readFileSync(syncFileName);
+}
+
+// Sync
 router.post("/tasks", (req, res) => {
     const description = req.body.description;
     const priority = req.body.priority;
@@ -29,13 +34,20 @@ router.post("/tasks", (req, res) => {
     res.json({ redirect: "/" });
 });
 
+// Async callback
 router.get("/tasks", (req, res) => {
-    const data = JSON.parse(fs.readFileSync(syncFileName));
-    res.json(data);
+    fs.readFile(syncFileName, "utf-8", (err, data) => {
+        if (err) {
+            console.log(err);
+            return;
+        }
+
+        res.json(JSON.parse(data));
+    });
 });
 
 router.delete("/tasks", (req, res) => {
-    let tasks = JSON.parse(fs.readFileSync(syncFileName));
+    let tasks = JSON.parse(readSync());
     const creationTimeOfTaskToDelete = new Date(req.body.creationTime);
 
     tasks = tasks.filter((task) => {
@@ -49,7 +61,7 @@ router.delete("/tasks", (req, res) => {
 });
 
 router.patch("/tasks", (req, res) => {
-    let tasks = JSON.parse(fs.readFileSync(syncFileName));
+    let tasks = JSON.parse(readSync());
     const creationTimeOfTaskToDelete = new Date(req.body.creationTime);
 
     taskIndex = tasks.findIndex((task) => {
