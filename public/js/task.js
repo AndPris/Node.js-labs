@@ -9,8 +9,8 @@ class Task {
 
     get creationTimeAsString() {
         const currentYear = this._creationTime.getFullYear();
-        const currentMonth = this._creationTime.getMonth() + 1;
-        const currentDay = this._creationTime.getDate();
+        const currentMonth = (this._creationTime.getMonth() + 1).toString().padStart(2, '0');
+        const currentDay = this._creationTime.getDate().toString().padStart(2, '0');
         const currentHours = this._creationTime.getHours().toString().padStart(2, '0');
         const currentMinutes = this._creationTime.getMinutes().toString().padStart(2, '0');
 
@@ -42,7 +42,7 @@ class Task {
     get finishDateAsString() {
         const currentYear = this._finishDate.getFullYear();
         const currentMonth = (this._finishDate.getMonth() + 1).toString().padStart(2, '0');
-        const currentDay = this._creationTime.getDate().toString().padStart(2, '0');
+        const currentDay = this._finishDate.getDate().toString().padStart(2, '0');
 
         return `${currentDay}.${currentMonth}.${currentYear}`;
     }

@@ -25,12 +25,26 @@ router.post('/tasks', (req, res) => {
 
     const task = new Task(description, priority, finishDate);
     saveSync(task);
-    res.redirect('/');
+    res.json({ redirect: '/' });
 });
 
 router.get('/tasks', (req, res) => {
     const data = JSON.parse(fs.readFileSync(syncFileName));
     res.json(data);
 });
+
+router.delete('/tasks', (req, res) => {
+    let tasks = JSON.parse(fs.readFileSync(syncFileName));
+    const creationTimeOfTaskToDelete = new Date(req.body.creationTime);
+
+    tasks = tasks.filter(task => {
+        let creationTime = new Date(task._creationTime);
+        creationTime.setMilliseconds(0);
+        return creationTime.getTime() !== creationTimeOfTaskToDelete.getTime();
+    });
+
+    fs.writeFileSync(syncFileName, JSON.stringify(tasks));
+    res.json({ redirect: '/' });
+})
 
 module.exports = router;
