@@ -5,10 +5,6 @@ block head
 
 block content
     #header
-        .flexrow-container
-            .standard-theme.theme-selector
-            .light-theme.theme-selector
-            .darker-theme.theme-selector
         a.title-link(href="/")
             h1#title Just do it.
             #border
@@ -22,7 +18,7 @@ block content
     .container
         img.author-img(src=photo, alt=name)
         h2.author-name=name
-        p.description=text
+        p.description.standard-description=text
 
     br
 
