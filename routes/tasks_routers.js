@@ -1,98 +1,75 @@
 const express = require("express");
-const fs = require("fs");
-const {
-    promises: { readFile, writeFile },
-} = require("fs");
 const router = express.Router();
 const { Task } = require("../public/js/task");
+const client = require("../config");
 
-const syncFileName = "todosSync.txt";
 
-function saveSync(todo) {
-    let todos;
+function getCurrentDateTime() {
+    const today = new Date();
 
-    try {
-        todos = JSON.parse(readSync());
-    } catch (err) {
-        todos = [];
-    }
+    const currentYear = today.getFullYear();
+    const currentMonth = (today.getMonth() + 1)
+        .toString()
+        .padStart(2, "0");
+    const currentDay = today
+        .getDate()
+        .toString()
+        .padStart(2, "0");
 
-    todos.push(todo);
-    fs.writeFileSync(syncFileName, JSON.stringify(todos));
+    const currentHours = today.getHours()
+        .toString()
+        .padStart(2, "0");
+    const currentMinutes = today.getMinutes()
+        .toString()
+        .padStart(2, "0");
+    const currentSeconds = today.getSeconds()
+        .toString()
+        .padStart(2, "0");
+
+    return `${currentYear}-${currentMonth}-${currentDay} ${currentHours}:${currentMinutes}:${currentSeconds}`;
 }
 
-function readSync() {
-    return fs.readFileSync(syncFileName);
-}
-
-// Sync
-router.post("/tasks", (req, res) => {
+router.post("/tasks", async (req, res) => {
     const description = req.body.description;
     const priority = req.body.priority;
-    const finishDate = new Date(req.body.finishDate);
+    const finishDate = req.body.finishDate;
+    const creationTime = new Date();
+    const isDone = false;
 
-    const task = new Task(description, priority, finishDate);
-    saveSync(task);
+    await client.connect();
+
+    const query = 'INSERT INTO tasks(description, priority, finishDate, creationTime, isDone) VALUES ($1, $2, $3, $4, $5)';
+    let result = await client.query(query, [description, priority, finishDate, creationTime, isDone]);
+    console.log(result);
+
+    await client.end();
+
     res.json({ redirect: "/" });
 });
 
-// Async callback
-router.get("/tasks", (req, res) => {
-    fs.readFile(syncFileName, "utf-8", (err, data) => {
-        if (err) {
-            console.error(err);
-            return;
-        }
+router.get("/tasks", async (req, res) => {
+    // await client.connect();
+    console.log("asdf");
+    const query = 'SELECT * FROM tasks';
+    let result = await client.query(query);
+    console.log("before");
+    console.log(result.rows);
+    console.log("after");
 
-        res.json(JSON.parse(data));
-    });
+    await client.end();
 });
 
-// Async promises
+
 router.delete("/tasks", (req, res) => {
     let tasks = [];
     const creationTimeOfTaskToDelete = new Date(req.body.creationTime);
 
-    readFile(syncFileName)
-        .then((data) => {
-            tasks = JSON.parse(data);
-
-            tasks = tasks.filter((task) => {
-                let creationTime = new Date(task._creationTime);
-                creationTime.setMilliseconds(0);
-                return (
-                    creationTime.getTime() !==
-                    creationTimeOfTaskToDelete.getTime()
-                );
-            });
-
-            return writeFile(syncFileName, JSON.stringify(tasks));
-        })
-        .then(() => {
-            res.json({ redirect: "/" });
-        })
-        .catch((error) => {
-            console.error(error.message);
-            res.status(500).json({ error: "Internal server error" });
-        });
+    res.json({ redirect: "/" });
 });
 
-// async/await
+
 router.patch("/tasks", async (req, res) => {
-    let tasks = JSON.parse(await readFile(syncFileName));
-    const creationTimeOfTaskToDelete = new Date(req.body.creationTime);
 
-    taskIndex = tasks.findIndex((task) => {
-        let creationTime = new Date(task._creationTime);
-        creationTime.setMilliseconds(0);
-        return creationTime.getTime() === creationTimeOfTaskToDelete.getTime();
-    });
-
-    console.log(tasks[taskIndex]._isDone);
-    tasks[taskIndex]._isDone = !tasks[taskIndex]._isDone;
-    console.log(tasks[taskIndex]._isDone);
-
-    await writeFile(syncFileName, JSON.stringify(tasks));
     res.json({ redirect: "/" });
 });
 

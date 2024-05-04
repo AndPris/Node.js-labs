@@ -6,36 +6,24 @@ const logger = require("morgan");
 const multer = require("multer");
 const client = require("./config");
 
-client.connect(function (err) {
-    if (err)
-        throw err;
-    client.query("SELECT VERSION()", [], function (err, result) {
-        if (err)
-            throw err;
 
-        console.log(result.rows[0].version);
-        client.end(function (err) {
-            if (err)
-                throw err;
-        });
-    });
-});
+async function createTasksTable() {
+    await client.connect();
 
-client.query(`CREATE TABLE IF NOT EXISTS tasks (
-    task_id SERIAL PRIMARY KEY,
-    description VARCHAR(100),
-    priority INT,
-    finishDate DATE,
-    creationTime TIMESTAMP,
-    isDone BOOL
-)`, (err, result) => {
-    if (err) {
-        console.error('Error creation table', err);
-    } else {
-        console.log('Table successfully created:', result.rows);
-    }
-});
+    let res = await client.query(`CREATE TABLE IF NOT EXISTS tasks (
+        task_id SERIAL PRIMARY KEY,
+        description VARCHAR(100),
+        priority INT,
+        finishDate DATE,
+        creationTime TIMESTAMP,
+        isDone BOOL
+    )`);
+    console.log(res);
 
+    await client.end();
+}
+
+// createTasksTable();
 
 const indexRouter = require("./routes/index");
 const authorRouter = require("./routes/authors_router");
