@@ -49,8 +49,7 @@ function validateForm() {
 
 async function deleteTask() {
     const todoElement = this.closest("li");
-    const creationTimeElement = todoElement.querySelector(".creation-time");
-    const creationTime = creationTimeElement.getAttribute("datetime");
+    const taskId = todoElement.getAttribute("id");
 
     try {
         let response = await fetch("/tasks", {
@@ -58,7 +57,7 @@ async function deleteTask() {
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({ creationTime: creationTime }),
+            body: JSON.stringify({ taskId: taskId }),
         });
 
         if (!response.ok) throw new Error("Network response was not ok");
@@ -72,8 +71,7 @@ async function deleteTask() {
 
 async function updateTask() {
     const todoElement = this.closest("li");
-    const creationTimeElement = todoElement.querySelector(".creation-time");
-    const creationTime = creationTimeElement.getAttribute("datetime");
+    const taskId = todoElement.getAttribute("id");
 
     try {
         let response = await fetch("/tasks", {
@@ -81,7 +79,7 @@ async function updateTask() {
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({ creationTime: creationTime }),
+            body: JSON.stringify({ taskId: taskId }),
         });
 
         if (!response.ok) throw new Error("Network response was not ok");
@@ -100,6 +98,7 @@ function displayTask(task) {
     const buttonsDiv = document.createElement("div");
 
     taskLi.classList.add("todo", `standard-todo`);
+    taskLi.setAttribute("id", task.id);
     if (task.isDone) taskLi.classList.add("completed");
 
     leftDiv.classList.add("todo-left-div");
@@ -155,11 +154,12 @@ async function loadTasks() {
 
         todos.forEach((todo) => {
             let task = new Task(
-                todo._description,
-                todo._priority,
-                todo._finishDate,
-                todo._creationTime,
-                todo._isDone
+                todo.task_id,
+                todo.description,
+                todo.priority,
+                todo.finishdate,
+                todo.creationtime,
+                todo.isdone
             );
             displayTask(task);
         });

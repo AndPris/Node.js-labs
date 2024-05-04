@@ -1,5 +1,5 @@
-require('dotenv').config();
-const pg = require('pg');
+require("dotenv").config();
+const pg = require("pg");
 
 const config = {
     user: process.env.USER,
@@ -14,4 +14,9 @@ const config = {
 };
 
 const client = new pg.Client(config);
+
+async function connect_client() {
+    await client.connect();
+}
+connect_client();
 module.exports = client;

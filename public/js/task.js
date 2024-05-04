@@ -1,11 +1,13 @@
 class Task {
     constructor(
+        id,
         description,
         priority,
         finishDate,
         creationTime,
         isDone = false
     ) {
+        this._id = id;
         this._description = description;
         this._priority = parseInt(priority);
         this._finishDate = new Date(finishDate);
@@ -32,6 +34,10 @@ class Task {
             .padStart(2, "0");
 
         return `${currentDay}.${currentMonth}.${currentYear} ${currentHours}:${currentMinutes}`;
+    }
+
+    get id() {
+        return this._id;
     }
 
     get creationTime() {
