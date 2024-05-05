@@ -87,4 +87,28 @@ router.patch("/tasks", async (req, res) => {
     res.json({ redirect: "/" });
 });
 
+
+router.put("/tasks", async (req, res) => {
+    const description = req.body.description;
+    const priority = req.body.priority;
+    const finishDate = req.body.finishDate;
+    const creationTime = new Date();
+    const isDone = false;
+    const task_id = req.body.taskId;
+
+    const query =
+        "UPDATE tasks SET description=$1, priority=$2, finishDate=$3, creationTime=$4 WHERE task_id=$5";
+    let result = await client.query(query, [
+        description,
+        priority,
+        finishDate,
+        creationTime,
+        task_id,
+    ]);
+    console.log(result);
+
+    res.json({ redirect: "/" });
+});
+
+
 module.exports = router;
