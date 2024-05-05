@@ -93,21 +93,39 @@ router.put("/tasks", async (req, res) => {
     const priority = req.body.priority;
     const finishDate = req.body.finishDate;
     const creationTime = new Date();
-    const isDone = false;
     const task_id = req.body.taskId;
 
     const query =
         "UPDATE tasks SET description=$1, priority=$2, finishDate=$3, creationTime=$4 WHERE task_id=$5";
-    let result = await client.query(query, [
-        description,
-        priority,
-        finishDate,
-        creationTime,
-        task_id,
-    ]);
-    console.log(result);
 
-    res.json({ redirect: "/" });
+    try {
+        await client.query('BEGIN');
+
+        let result = await client.query(query, [
+            description,
+            priority,
+            finishDate,
+            creationTime,
+            task_id,
+        ]);
+
+
+        await client.query('COMMIT');
+
+        res.json({ redirect: "/" });
+    } catch (e) {
+        await client.query('ROLLBACK');
+        console.error('Error in transaction', e);
+        if (e.constraint === 'description_min_length')
+            res.json({error_message: "Provide valid description, please!"})
+        else if (e.constraint === 'finishdate_check')
+            res.json({error_message: "Provide valid finish date, please!"})
+
+        res.json({error_message: "Unexpected error!"})
+    }
+
+
+
 });
 
 

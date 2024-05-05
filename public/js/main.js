@@ -111,9 +111,12 @@ async function editTaskInDB(event) {
         const responseData = await response.json();
         if (responseData.redirect)
             window.location.href = responseData.redirect;
+        if (responseData.error_message)
+            alert(responseData.error_message)
     } catch (err) {
         console.log(err);
     }
+
 }
 
 function showEditTaskMenu(taskLiItem) {

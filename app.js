@@ -23,6 +23,15 @@ async function createTasksTable() {
     await client.end();
 }
 
+async function alterTasksTable() {
+    // let res = await client.query(`ALTER TABLE tasks
+    // ADD CONSTRAINT description_min_length CHECK (length(description) > 0)`);
+    let res = await client.query(`ALTER TABLE tasks 
+    ADD CONSTRAINT finishdate_check CHECK (finishdate >= CURRENT_DATE)`);
+}
+
+// alterTasksTable();
+
 // createTasksTable();
 
 const indexRouter = require("./routes/index");
