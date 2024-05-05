@@ -222,7 +222,8 @@ form button {
 }
 
 .check-btn,
-.delete-btn {
+.delete-btn,
+.edit-btn {
   font-size: 19px;
   cursor: pointer;
   width: 2em;
@@ -413,7 +414,7 @@ form button {
 .todo-buttons-div {
   display: flex;
   justify-content: flex-end;
-  width: 13%;
+  width: 16%;
 }
 
 input::-webkit-outer-spin-button,
