@@ -109,23 +109,21 @@ router.put("/tasks", async (req, res) => {
             task_id,
         ]);
 
-
         await client.query('COMMIT');
 
         res.json({ redirect: "/" });
     } catch (e) {
         await client.query('ROLLBACK');
         console.error('Error in transaction', e);
+
+        let errorMessage = "Unexpected error!";
         if (e.constraint === 'description_min_length')
-            res.json({error_message: "Provide valid description, please!"})
+            errorMessage = "Provide valid description, please!";
         else if (e.constraint === 'finishdate_check')
-            res.json({error_message: "Provide valid finish date, please!"})
+            errorMessage = "Provide valid finish date, please!";
 
-        res.json({error_message: "Unexpected error!"})
+        res.json({ error_message: errorMessage });
     }
-
-
-
 });
 
 
