@@ -186,10 +186,30 @@ function sortTasksByPriority() {
     prioritySortOrder = (prioritySortOrder+1) % 3;
     clearTasks();
     loadTasks([["priority", prioritySortOrder], ["finishDate", finishDateSortOrder]]);
+
+    const button = document.getElementById("priority-sort-button");
+    let buttonText = "By priority";
+
+    if(prioritySortOrder === 1)
+        buttonText += " ↓";
+    else if(prioritySortOrder === 2)
+        buttonText += " ↑";
+
+    button.textContent = buttonText;
 }
 
 function sortTasksByFinishDate() {
     finishDateSortOrder = (finishDateSortOrder+1) % 3;
     clearTasks();
     loadTasks([["finishDate", finishDateSortOrder], ["priority", prioritySortOrder]]);
+
+    const button = document.getElementById("finish-date-sort-button");
+    let buttonText = "By finish date";
+
+    if(finishDateSortOrder === 1)
+        buttonText += " ↓";
+    else if(finishDateSortOrder === 2)
+        buttonText += " ↑";
+
+    button.textContent = buttonText;
 }

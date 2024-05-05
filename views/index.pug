@@ -27,8 +27,8 @@ block content
         div
             p
         div.sort-buttons
-            button.sort-button.standard-button(onclick="sortTasksByPriority()") By priority
-            button.sort-button.standard-button(onclick="sortTasksByFinishDate()") By finish date
+            button#priority-sort-button.sort-button.standard-button(onclick="sortTasksByPriority()") By priority
+            button#finish-date-sort-button.sort-button.standard-button(onclick="sortTasksByFinishDate()") By finish date
         #myUnOrdList
         ul.todo-list
 
