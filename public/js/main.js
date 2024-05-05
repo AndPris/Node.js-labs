@@ -147,9 +147,10 @@ function displayTask(task) {
     toDoList.appendChild(taskLi);
 }
 
-async function loadTasks() {
+async function loadTasks(sortOrders) {
     try {
-        const response = await fetch("/tasks");
+        const queryString = `?sortOrders=${encodeURIComponent(JSON.stringify(sortOrders || []))}`;
+        const response = await fetch("/tasks" + queryString)
         const todos = await response.json();
 
         todos.forEach((todo) => {
@@ -169,3 +170,26 @@ async function loadTasks() {
 }
 
 loadTasks();
+
+
+let prioritySortOrder = 0;
+let finishDateSortOrder = 0;
+
+
+function clearTasks() {
+    const ul = document.querySelector('.todo-list');
+    while (ul.firstChild)
+        ul.removeChild(ul.firstChild);
+}
+
+function sortTasksByPriority() {
+    prioritySortOrder = (prioritySortOrder+1) % 3;
+    clearTasks();
+    loadTasks([["priority", prioritySortOrder], ["finishDate", finishDateSortOrder]]);
+}
+
+function sortTasksByFinishDate() {
+    finishDateSortOrder = (finishDateSortOrder+1) % 3;
+    clearTasks();
+    loadTasks([["finishDate", finishDateSortOrder], ["priority", prioritySortOrder]]);
+}

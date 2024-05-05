@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const { Task } = require("../public/js/task");
 const client = require("../config");
+const {continueSession} = require("pg/lib/crypto/sasl");
 
 function getCurrentDateTime() {
     const today = new Date();
@@ -39,10 +40,34 @@ router.post("/tasks", async (req, res) => {
 });
 
 router.get("/tasks", async (req, res) => {
-    const query = "SELECT * FROM tasks ORDER BY isdone, creationtime";
-    let result = await client.query(query);
-    res.json(result.rows);
+    const sortOrders = JSON.parse(req.query.sortOrders);
+    let orderByClause = 'ORDER BY isdone ASC';
+
+    sortOrders.forEach((sortOrder) => {
+        if(sortOrder[1] === 0)
+            return;
+
+        if(sortOrder[0] === "priority")
+            orderByClause += ", priority";
+        else if (sortOrder[0] === "finishDate")
+            orderByClause += ", finishdate";
+        else
+            return;
+
+        let order = sortOrder[1] === 1 ? " ASC" : " DESC";
+        orderByClause += order;
+    });
+
+    const query = `SELECT * FROM tasks ${orderByClause}`;
+
+    try {
+        let result = await client.query(query);
+        res.json(result.rows);
+    } catch (error) {
+        res.status(500).json({ error: 'Internal server error' });
+    }
 });
+
 
 router.delete("/tasks", (req, res) => {
     const taskId = req.body.taskId;

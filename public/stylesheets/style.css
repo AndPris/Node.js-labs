@@ -421,3 +421,17 @@ input::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
+
+.sort-buttons {
+  display: flex;
+  width: 40%;
+  justify-content: flex-end;
+  column-gap: 35px;
+  margin: 16px 0;
+}
+
+.sort-button {
+  padding: 10px;
+  font-size: 15px;
+  border-radius: 15px;
+}
