@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const {Task}= require("../public/js/task");
 const {Priority}= require("../public/js/priority");
+const {Sequelize} = require("sequelize");
 
 router.post("/tasks", async (req, res) => {
     try {
@@ -15,35 +16,6 @@ router.post("/tasks", async (req, res) => {
 });
 
 router.get("/tasks", async (req, res) => {
-    // const sortOrders = JSON.parse(req.query.sortOrders);
-    // let orderByClause = 'ORDER BY isdone ASC';
-    //
-    // sortOrders.forEach((sortOrder) => {
-    //     if(sortOrder[1] === 0)
-    //         return;
-    //
-    //     if(sortOrder[0] === "priority")
-    //         orderByClause += ", priority";
-    //     else if (sortOrder[0] === "finishDate")
-    //         orderByClause += ", finishdate";
-    //     else
-    //         return;
-    //
-    //     let order = sortOrder[1] === 1 ? " ASC" : " DESC";
-    //     orderByClause += order;
-    // });
-    //
-    // const query = `SELECT * FROM tasks ${orderByClause}`;
-    //
-    // try {
-    //     let result = await client.query(query);
-    //     res.json(result.rows);
-    // } catch (error) {
-    //     res.status(500).json({ error: 'Internal server error' });
-    // } finally {
-    //     client.release();
-    // }
-
     try {
         const tasks = await Task.findAll({
             include: {
@@ -59,22 +31,17 @@ router.get("/tasks", async (req, res) => {
 
 
 router.delete("/tasks", async (req, res) => {
-    const client = await pool.connect();
-    const taskId = req.body.taskId;
-    const query = "DELETE FROM tasks WHERE task_id = $1";
-
-    client.query(query, [taskId]);
-    client.release();
+    await Task.destroy(
+        { where: { id: req.body.taskId, }, },
+    );
     res.json({ redirect: "/" });
 });
 
 router.patch("/tasks", async (req, res) => {
-    const client = await pool.connect();
-    const taskId = req.body.taskId;
-    const query = "UPDATE tasks SET isdone = NOT isdone WHERE task_id = $1";
-
-    client.query(query, [taskId]);
-    client.release();
+    await Task.update(
+        { isDone: Sequelize.literal('NOT "isDone"') },
+        { where: { id: req.body.taskId, }, },
+    );
     res.json({ redirect: "/" });
 });
 

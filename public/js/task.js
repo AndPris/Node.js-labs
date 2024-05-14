@@ -34,6 +34,9 @@ Task.init({
         creationTimeAsString: {
             type: DataTypes.VIRTUAL,
             get() {
+                if(!this.createdAt)
+                    return;
+
                 const currentYear = this.createdAt.getFullYear();
                 const currentMonth = (this.createdAt.getMonth() + 1)
                     .toString()
@@ -58,6 +61,9 @@ Task.init({
             {
                 type: DataTypes.VIRTUAL,
                 get() {
+                    if(!this.finishDate)
+                        return;
+
                     const finishDate = new Date(this.finishDate);
 
                     const currentYear = finishDate.getFullYear();
