@@ -4,6 +4,37 @@ const path = require("path");
 const cookieParser = require("cookie-parser");
 const logger = require("morgan");
 const multer = require("multer");
+const pool = require("./config");
+
+
+async function createTasksTable() {
+    const client = await pool.connect();
+
+    let res = await client.query(`CREATE TABLE IF NOT EXISTS tasks (
+        task_id SERIAL PRIMARY KEY,
+        description VARCHAR(100),
+        priority INT,
+        finishDate DATE,
+        creationTime TIMESTAMP,
+        isDone BOOL
+    )`);
+    console.log(res);
+
+    client.release();
+}
+
+async function alterTasksTable() {
+    const client = await pool.connect();
+
+    await client.query(`ALTER TABLE tasks 
+    ADD CONSTRAINT finishdate_check CHECK (finishdate >= CURRENT_DATE)`);
+
+    client.release();
+}
+
+// alterTasksTable();
+
+// createTasksTable();
 
 const indexRouter = require("./routes/index");
 const authorRouter = require("./routes/authors_router");

@@ -1,29 +1,31 @@
 const toDoList = document.querySelector(".todo-list");
 
+async function addTaskToDB(event) {
+    event.preventDefault();
+
+    if (!validateForm()) return;
+
+    const formData = new FormData(this);
+
+    try {
+        let response = await fetch("/tasks", {
+            method: "POST",
+            body: formData,
+        });
+
+        if (!response.ok) throw new Error("Network response was not ok");
+
+        const responseData = await response.json();
+        if (responseData.redirect)
+            window.location.href = responseData.redirect;
+    } catch (err) {
+        console.log(err);
+    }
+}
+
 document
     .getElementById("form")
-    .addEventListener("submit", async function (event) {
-        event.preventDefault();
-
-        if (!validateForm()) return;
-
-        const formData = new FormData(this);
-
-        try {
-            let response = await fetch("/tasks", {
-                method: "POST",
-                body: formData,
-            });
-
-            if (!response.ok) throw new Error("Network response was not ok");
-
-            const responseData = await response.json();
-            if (responseData.redirect)
-                window.location.href = responseData.redirect;
-        } catch (err) {
-            console.log(err);
-        }
-    });
+    .addEventListener("submit", addTaskToDB);
 
 function validateForm() {
     const description = document.getElementById("description").value;
@@ -49,8 +51,7 @@ function validateForm() {
 
 async function deleteTask() {
     const todoElement = this.closest("li");
-    const creationTimeElement = todoElement.querySelector(".creation-time");
-    const creationTime = creationTimeElement.getAttribute("datetime");
+    const taskId = todoElement.getAttribute("id");
 
     try {
         let response = await fetch("/tasks", {
@@ -58,7 +59,7 @@ async function deleteTask() {
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({ creationTime: creationTime }),
+            body: JSON.stringify({ taskId: taskId }),
         });
 
         if (!response.ok) throw new Error("Network response was not ok");
@@ -70,10 +71,9 @@ async function deleteTask() {
     }
 }
 
-async function updateTask() {
+async function checkTask() {
     const todoElement = this.closest("li");
-    const creationTimeElement = todoElement.querySelector(".creation-time");
-    const creationTime = creationTimeElement.getAttribute("datetime");
+    const taskId = todoElement.getAttribute("id");
 
     try {
         let response = await fetch("/tasks", {
@@ -81,7 +81,7 @@ async function updateTask() {
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({ creationTime: creationTime }),
+            body: JSON.stringify({ taskId: taskId }),
         });
 
         if (!response.ok) throw new Error("Network response was not ok");
@@ -92,6 +92,72 @@ async function updateTask() {
         console.log(err);
     }
 }
+
+
+async function editTaskInDB(event) {
+    event.preventDefault();
+
+    const formData = new FormData(this);
+    formData.set("taskId", this.getAttribute("task-id"));
+
+    try {
+        let response = await fetch("/tasks", {
+            method: "PUT",
+            body: formData,
+        });
+
+        if (!response.ok) throw new Error("Network response was not ok");
+
+        const responseData = await response.json();
+        if (responseData.redirect)
+            window.location.href = responseData.redirect;
+        if (responseData.error_message)
+            alert(responseData.error_message)
+    } catch (err) {
+        console.log(err);
+    }
+
+}
+
+function showEditTaskMenu(taskLiItem) {
+    const taskId = taskLiItem.getAttribute("id");
+    const description = taskLiItem.querySelector('.todo-item-description').textContent;
+    const priority = taskLiItem.querySelector('.todo-item-priority').textContent;
+    const finishDate = taskLiItem.querySelector('.todo-buttons-div').previousElementSibling.textContent;
+
+    const form = document.getElementById("form");
+    form.setAttribute("task-id", taskId);
+
+    const descriptionField = document.getElementById('description');
+    descriptionField.value = description;
+    descriptionField.placeholder = "Edit the task.";
+
+    const prioritySelect = document.getElementById('priority');
+    prioritySelect.value = priority === 'High' ? '1' : priority === 'Medium' ? '2' : '3';
+
+    const [day, month, year] = finishDate.split('.');
+    document.getElementById('finishDate').value = `${year}-${month}-${day}`;
+    document.querySelector('.todo-btn').textContent = "Edit Task!";
+
+    form.method = "put";
+
+    document
+        .getElementById("form")
+        .removeEventListener("submit", addTaskToDB);
+
+    document
+        .getElementById("form")
+        .addEventListener("submit", editTaskInDB);
+
+    clearChildren('.sort-buttons');
+    clearChildren('.todo-list');
+}
+
+async function editTask() {
+    showEditTaskMenu(this.closest("li"));
+
+}
+
 
 function displayTask(task) {
     const taskLi = document.createElement("li");
@@ -100,6 +166,7 @@ function displayTask(task) {
     const buttonsDiv = document.createElement("div");
 
     taskLi.classList.add("todo", `standard-todo`);
+    taskLi.setAttribute("id", task.id);
     if (task.isDone) taskLi.classList.add("completed");
 
     leftDiv.classList.add("todo-left-div");
@@ -129,10 +196,16 @@ function displayTask(task) {
     newFinishDate.classList.add("todo-item");
     taskLi.appendChild(newFinishDate);
 
+    const editButton = document.createElement("button");
+    editButton.innerHTML = '<i class="fa-solid fa-pencil"></i>\n';
+    editButton.classList.add("edit-btn", `standard-button`);
+    editButton.addEventListener("click", editTask);
+    buttonsDiv.appendChild(editButton);
+
     const checkedButton = document.createElement("button");
     checkedButton.innerHTML = '<i class="fas fa-check"></i>';
     checkedButton.classList.add("check-btn", `standard-button`);
-    checkedButton.addEventListener("click", updateTask);
+    checkedButton.addEventListener("click", checkTask);
     buttonsDiv.appendChild(checkedButton);
 
     const deleteButton = document.createElement("button");
@@ -141,25 +214,24 @@ function displayTask(task) {
     deleteButton.addEventListener("click", deleteTask);
 
     buttonsDiv.appendChild(deleteButton);
-
     taskLi.appendChild(buttonsDiv);
-
-    // Append to list;
     toDoList.appendChild(taskLi);
 }
 
-async function loadTasks() {
+async function loadTasks(sortOrders) {
     try {
-        const response = await fetch("/tasks");
+        const queryString = `?sortOrders=${encodeURIComponent(JSON.stringify(sortOrders || []))}`;
+        const response = await fetch("/tasks" + queryString)
         const todos = await response.json();
 
         todos.forEach((todo) => {
             let task = new Task(
-                todo._description,
-                todo._priority,
-                todo._finishDate,
-                todo._creationTime,
-                todo._isDone
+                todo.task_id,
+                todo.description,
+                todo.priority,
+                todo.finishdate,
+                todo.creationtime,
+                todo.isdone
             );
             displayTask(task);
         });
@@ -169,3 +241,47 @@ async function loadTasks() {
 }
 
 loadTasks();
+
+
+let prioritySortOrder = 0;
+let finishDateSortOrder = 0;
+
+
+function clearChildren(className) {
+    const element = document.querySelector(className);
+    while (element.firstChild)
+        element.removeChild(element.firstChild);
+}
+
+
+function sortTasksByPriority() {
+    prioritySortOrder = (prioritySortOrder+1) % 3;
+    clearChildren('.todo-list');
+    loadTasks([["priority", prioritySortOrder], ["finishDate", finishDateSortOrder]]);
+
+    const button = document.getElementById("priority-sort-button");
+    let buttonText = "By priority";
+
+    if(prioritySortOrder === 1)
+        buttonText += " ↓";
+    else if(prioritySortOrder === 2)
+        buttonText += " ↑";
+
+    button.textContent = buttonText;
+}
+
+function sortTasksByFinishDate() {
+    finishDateSortOrder = (finishDateSortOrder+1) % 3;
+    clearChildren('.todo-list');
+    loadTasks([["finishDate", finishDateSortOrder], ["priority", prioritySortOrder]]);
+
+    const button = document.getElementById("finish-date-sort-button");
+    let buttonText = "By finish date";
+
+    if(finishDateSortOrder === 1)
+        buttonText += " ↓";
+    else if(finishDateSortOrder === 2)
+        buttonText += " ↑";
+
+    button.textContent = buttonText;
+}
