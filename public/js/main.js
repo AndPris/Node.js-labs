@@ -225,14 +225,6 @@ async function loadTasks(sortOrders) {
         const todos = await response.json();
         console.log(todos);
         todos.forEach((todo) => {
-            // let task = new Task(
-            //     todo.task_id,
-            //     todo.description,
-            //     todo.priority,
-            //     todo.finishdate,
-            //     todo.creationtime,
-            //     todo.isdone
-            // );
             displayTask(todo);
         });
     } catch (error) {
