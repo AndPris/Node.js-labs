@@ -1,62 +1,59 @@
 const express = require("express");
 const router = express.Router();
-const pool = require("../config");
+const {Task}= require("../public/js/task");
+const {Priority}= require("../public/js/priority");
 
 router.post("/tasks", async (req, res) => {
-    const description = req.body.description;
-    const priority = req.body.priority;
-    const finishDate = req.body.finishDate;
-    const creationTime = new Date();
-    const isDone = false;
+    try {
+        await Task.create({description: req.body.description, priorityId: req.body.priority, finishDate: req.body.finishDate});
 
-    const client = await pool.connect();
-
-    const query =
-        "INSERT INTO tasks(description, priority, finishDate, creationTime, isDone) VALUES ($1, $2, $3, $4, $5)";
-    let result = await client.query(query, [
-        description,
-        priority,
-        finishDate,
-        creationTime,
-        isDone,
-    ]);
-    console.log(result);
-
-    client.release();
-
-    res.json({ redirect: "/" });
+        res.json({redirect: "/"});
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
 });
 
 router.get("/tasks", async (req, res) => {
-    const client = await pool.connect();
-
-    const sortOrders = JSON.parse(req.query.sortOrders);
-    let orderByClause = 'ORDER BY isdone ASC';
-
-    sortOrders.forEach((sortOrder) => {
-        if(sortOrder[1] === 0)
-            return;
-
-        if(sortOrder[0] === "priority")
-            orderByClause += ", priority";
-        else if (sortOrder[0] === "finishDate")
-            orderByClause += ", finishdate";
-        else
-            return;
-
-        let order = sortOrder[1] === 1 ? " ASC" : " DESC";
-        orderByClause += order;
-    });
-
-    const query = `SELECT * FROM tasks ${orderByClause}`;
+    // const sortOrders = JSON.parse(req.query.sortOrders);
+    // let orderByClause = 'ORDER BY isdone ASC';
+    //
+    // sortOrders.forEach((sortOrder) => {
+    //     if(sortOrder[1] === 0)
+    //         return;
+    //
+    //     if(sortOrder[0] === "priority")
+    //         orderByClause += ", priority";
+    //     else if (sortOrder[0] === "finishDate")
+    //         orderByClause += ", finishdate";
+    //     else
+    //         return;
+    //
+    //     let order = sortOrder[1] === 1 ? " ASC" : " DESC";
+    //     orderByClause += order;
+    // });
+    //
+    // const query = `SELECT * FROM tasks ${orderByClause}`;
+    //
+    // try {
+    //     let result = await client.query(query);
+    //     res.json(result.rows);
+    // } catch (error) {
+    //     res.status(500).json({ error: 'Internal server error' });
+    // } finally {
+    //     client.release();
+    // }
 
     try {
-        let result = await client.query(query);
-        res.json(result.rows);
-    } catch (error) {
+        const tasks = await Task.findAll({
+            include: {
+                model: Priority,
+            },
+        });
+        res.json(tasks);
+    } catch (err) {
+        console.log(err);
         res.status(500).json({ error: 'Internal server error' });
-    } finally {
-        client.release();
     }
 });
 
