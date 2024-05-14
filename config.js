@@ -1,5 +1,6 @@
 require("dotenv").config();
 const pg = require("pg");
+const { Pool } = pg;
 
 const config = {
     user: process.env.USER,
@@ -11,12 +12,11 @@ const config = {
         rejectUnauthorized: process.env.REJECTUNAUTHORIZED,
         ca: process.env.CA,
     },
+    max: process.env.MAX,
+    idleTimeoutMillis: process.env.IDLETIMEOUTMILLS,
+    connectionTimeoutMillis: process.env.CONNECTIONTIMEOUTMILLIS,
 };
 
-const client = new pg.Client(config);
+const pool = new Pool(config);
 
-async function connect_client() {
-    await client.connect();
-}
-connect_client();
-module.exports = client;
+module.exports = pool

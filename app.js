@@ -4,11 +4,11 @@ const path = require("path");
 const cookieParser = require("cookie-parser");
 const logger = require("morgan");
 const multer = require("multer");
-const client = require("./config");
+const pool = require("./config");
 
 
 async function createTasksTable() {
-    await client.connect();
+    const client = await pool.connect();
 
     let res = await client.query(`CREATE TABLE IF NOT EXISTS tasks (
         task_id SERIAL PRIMARY KEY,
@@ -20,14 +20,16 @@ async function createTasksTable() {
     )`);
     console.log(res);
 
-    await client.end();
+    client.release();
 }
 
 async function alterTasksTable() {
-    // let res = await client.query(`ALTER TABLE tasks
-    // ADD CONSTRAINT description_min_length CHECK (length(description) > 0)`);
-    let res = await client.query(`ALTER TABLE tasks 
+    const client = await pool.connect();
+
+    await client.query(`ALTER TABLE tasks 
     ADD CONSTRAINT finishdate_check CHECK (finishdate >= CURRENT_DATE)`);
+
+    client.release();
 }
 
 // alterTasksTable();

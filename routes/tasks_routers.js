@@ -1,22 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { Task } = require("../public/js/task");
-const client = require("../config");
-const {continueSession} = require("pg/lib/crypto/sasl");
-
-function getCurrentDateTime() {
-    const today = new Date();
-
-    const currentYear = today.getFullYear();
-    const currentMonth = (today.getMonth() + 1).toString().padStart(2, "0");
-    const currentDay = today.getDate().toString().padStart(2, "0");
-
-    const currentHours = today.getHours().toString().padStart(2, "0");
-    const currentMinutes = today.getMinutes().toString().padStart(2, "0");
-    const currentSeconds = today.getSeconds().toString().padStart(2, "0");
-
-    return `${currentYear}-${currentMonth}-${currentDay} ${currentHours}:${currentMinutes}:${currentSeconds}`;
-}
+const pool = require("../config");
 
 router.post("/tasks", async (req, res) => {
     const description = req.body.description;
@@ -24,6 +8,8 @@ router.post("/tasks", async (req, res) => {
     const finishDate = req.body.finishDate;
     const creationTime = new Date();
     const isDone = false;
+
+    const client = await pool.connect();
 
     const query =
         "INSERT INTO tasks(description, priority, finishDate, creationTime, isDone) VALUES ($1, $2, $3, $4, $5)";
@@ -36,10 +22,14 @@ router.post("/tasks", async (req, res) => {
     ]);
     console.log(result);
 
+    client.release();
+
     res.json({ redirect: "/" });
 });
 
 router.get("/tasks", async (req, res) => {
+    const client = await pool.connect();
+
     const sortOrders = JSON.parse(req.query.sortOrders);
     let orderByClause = 'ORDER BY isdone ASC';
 
@@ -65,30 +55,35 @@ router.get("/tasks", async (req, res) => {
         res.json(result.rows);
     } catch (error) {
         res.status(500).json({ error: 'Internal server error' });
+    } finally {
+        client.release();
     }
 });
 
 
-router.delete("/tasks", (req, res) => {
+router.delete("/tasks", async (req, res) => {
+    const client = await pool.connect();
     const taskId = req.body.taskId;
     const query = "DELETE FROM tasks WHERE task_id = $1";
 
     client.query(query, [taskId]);
-
+    client.release();
     res.json({ redirect: "/" });
 });
 
 router.patch("/tasks", async (req, res) => {
+    const client = await pool.connect();
     const taskId = req.body.taskId;
     const query = "UPDATE tasks SET isdone = NOT isdone WHERE task_id = $1";
 
     client.query(query, [taskId]);
-
+    client.release();
     res.json({ redirect: "/" });
 });
 
 
 router.put("/tasks", async (req, res) => {
+    const client = await pool.connect();
     const description = req.body.description;
     const priority = req.body.priority;
     const finishDate = req.body.finishDate;
@@ -101,7 +96,7 @@ router.put("/tasks", async (req, res) => {
     try {
         await client.query('BEGIN');
 
-        let result = await client.query(query, [
+        await client.query(query, [
             description,
             priority,
             finishDate,
@@ -123,6 +118,8 @@ router.put("/tasks", async (req, res) => {
             errorMessage = "Provide valid finish date, please!";
 
         res.json({ error_message: errorMessage });
+    } finally {
+        client.release();
     }
 });
 
