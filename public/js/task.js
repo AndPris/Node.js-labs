@@ -13,6 +13,11 @@ Task.init({
         description: {
             type: DataTypes.STRING,
             allowNull: false,
+            validate: {
+                notEmpty: {
+                    msg: "Provide description, please"
+                },
+            },
         },
         priorityId: {
             type: DataTypes.INTEGER,
@@ -25,6 +30,13 @@ Task.init({
         finishDate: {
             type: DataTypes.DATEONLY,
             allowNull: false,
+            validate: {
+                isGreaterThanToday(value) {
+                    if (new Date(value) <= new Date()) {
+                        throw new Error('Finish date must be greater than today');
+                    }
+                }
+            }
         },
         isDone: {
             allowNull: false,
@@ -34,22 +46,22 @@ Task.init({
         creationTimeAsString: {
             type: DataTypes.VIRTUAL,
             get() {
-                if(!this.createdAt)
+                if(!this.updatedAt)
                     return;
 
-                const currentYear = this.createdAt.getFullYear();
-                const currentMonth = (this.createdAt.getMonth() + 1)
+                const currentYear = this.updatedAt.getFullYear();
+                const currentMonth = (this.updatedAt.getMonth() + 1)
                     .toString()
                     .padStart(2, "0");
-                const currentDay = this.createdAt
+                const currentDay = this.updatedAt
                     .getDate()
                     .toString()
                     .padStart(2, "0");
-                const currentHours = this.createdAt
+                const currentHours = this.updatedAt
                     .getHours()
                     .toString()
                     .padStart(2, "0");
-                const currentMinutes = this.createdAt
+                const currentMinutes = this.updatedAt
                     .getMinutes()
                     .toString()
                     .padStart(2, "0");
@@ -90,10 +102,11 @@ Priority.hasMany(Task, { foreignKey: 'priorityId' });
 Task.belongsTo(Priority, { foreignKey: 'priorityId' });
 
 async function synchronize() {
-    await sequelize.sync({ force: true })
+    // await sequelize.sync({ force: true })
+    await Task.sync({alter: true});
 }
 
-// synchronize();
+synchronize();
 
 if (typeof module !== "undefined" && typeof module.exports !== "undefined")
     module.exports = { Task };

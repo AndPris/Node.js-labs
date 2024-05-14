@@ -3,6 +3,7 @@ const router = express.Router();
 const {Task}= require("../public/js/task");
 const {Priority}= require("../public/js/priority");
 const {Sequelize} = require("sequelize");
+const {sequelize} = require("../config");
 
 router.post("/tasks", async (req, res) => {
     try {
@@ -16,11 +17,35 @@ router.post("/tasks", async (req, res) => {
 });
 
 router.get("/tasks", async (req, res) => {
+    const sortOrders = JSON.parse(req.query.sortOrders);
+    const order = [];
+
+    sortOrders.forEach((sortOrder) => {
+        if (sortOrder[1] === 0) return;
+
+        let column;
+        if (sortOrder[0] === "priority") {
+            column = 'priorityId';
+        } else if (sortOrder[0] === "finishDate") {
+            column = 'finishDate';
+        } else {
+            return;
+        }
+
+        const direction = sortOrder[1] === 1 ? 'ASC' : 'DESC';
+        order.push([column, direction]);
+    });
+
+    if (order.length === 0) {
+        order.push(['isDone', 'ASC']);
+    }
+
     try {
         const tasks = await Task.findAll({
             include: {
                 model: Priority,
             },
+            order
         });
         res.json(tasks);
     } catch (err) {
@@ -47,43 +72,25 @@ router.patch("/tasks", async (req, res) => {
 
 
 router.put("/tasks", async (req, res) => {
-    const client = await pool.connect();
-    const description = req.body.description;
-    const priority = req.body.priority;
-    const finishDate = req.body.finishDate;
-    const creationTime = new Date();
-    const task_id = req.body.taskId;
-
-    const query =
-        "UPDATE tasks SET description=$1, priority=$2, finishDate=$3, creationTime=$4 WHERE task_id=$5";
+    const transaction = await sequelize.transaction();
 
     try {
-        await client.query('BEGIN');
+        await Task.update(
+            { description: req.body.description, priorityId: req.body.priority, finishDate: req.body.finishDate},
+            { where: { id: req.body.taskId, }, },
+            {transaction: transaction},
+        );
 
-        await client.query(query, [
-            description,
-            priority,
-            finishDate,
-            creationTime,
-            task_id,
-        ]);
-
-        await client.query('COMMIT');
+        await transaction.commit();
 
         res.json({ redirect: "/" });
     } catch (e) {
-        await client.query('ROLLBACK');
+        await transaction.rollback();
         console.error('Error in transaction', e);
 
-        let errorMessage = "Unexpected error!";
-        if (e.constraint === 'description_min_length')
-            errorMessage = "Provide valid description, please!";
-        else if (e.constraint === 'finishdate_check')
-            errorMessage = "Provide valid finish date, please!";
+        let errorMessage = e.message ? e.message : "Unexpected error!";
 
         res.json({ error_message: errorMessage });
-    } finally {
-        client.release();
     }
 });
 
