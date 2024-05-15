@@ -155,7 +155,6 @@ function showEditTaskMenu(taskLiItem) {
 
 async function editTask() {
     showEditTaskMenu(this.closest("li"));
-
 }
 
 
@@ -221,7 +220,12 @@ function displayTask(task) {
 async function loadTasks(sortOrders) {
     try {
         const queryString = `?sortOrders=${encodeURIComponent(JSON.stringify(sortOrders || []))}`;
-        const response = await fetch("/tasks" + queryString)
+        const response = await fetch("/tasks" + queryString, {
+            method: "GET",
+            headers: {
+                "LoadTasks": "true"
+            }
+        })
         const todos = await response.json();
         console.log(todos);
         todos.forEach((todo) => {

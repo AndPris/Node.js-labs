@@ -4,7 +4,6 @@ const path = require("path");
 const cookieParser = require("cookie-parser");
 const logger = require("morgan");
 const multer = require("multer");
-const indexRouter = require("./routes/index");
 const authorRouter = require("./routes/authors_router");
 const staticHTMLRouter = require("./routes/static_html_router");
 const tasksRouter = require("./routes/tasks_routers");
@@ -23,10 +22,9 @@ app.use(multer().none());
 app.use(express.static(path.join(__dirname, "public")));
 app.use("/images", express.static("public/images"));
 
-app.use("/", indexRouter);
 app.use("/authors", authorRouter);
-app.use("/static", staticHTMLRouter);
-app.use("/", tasksRouter);
+app.use("/", staticHTMLRouter);
+app.use("/tasks", tasksRouter);
 
 app.use(function (req, res, next) {
     next(createError(404));
