@@ -172,7 +172,7 @@ function displayTask(task) {
     leftDiv.classList.add("todo-left-div");
     buttonsDiv.classList.add("todo-buttons-div");
     creationTimeDiv.classList.add("creation-time");
-    creationTimeDiv.setAttribute("datetime", task.creationTime);
+    creationTimeDiv.setAttribute("datetime", task.createdAt);
 
     const newTask = document.createElement("div");
     const newPriority = document.createElement("div");
@@ -187,7 +187,7 @@ function displayTask(task) {
     leftDiv.appendChild(creationTimeDiv);
     taskLi.appendChild(leftDiv);
 
-    newPriority.innerText = task.priorityAsString;
+    newPriority.innerText = task.Priority.description;
     newPriority.classList.add("todo-item");
     newPriority.classList.add("todo-item-priority");
     taskLi.appendChild(newPriority);
@@ -223,17 +223,9 @@ async function loadTasks(sortOrders) {
         const queryString = `?sortOrders=${encodeURIComponent(JSON.stringify(sortOrders || []))}`;
         const response = await fetch("/tasks" + queryString)
         const todos = await response.json();
-
+        console.log(todos);
         todos.forEach((todo) => {
-            let task = new Task(
-                todo.task_id,
-                todo.description,
-                todo.priority,
-                todo.finishdate,
-                todo.creationtime,
-                todo.isdone
-            );
-            displayTask(task);
+            displayTask(todo);
         });
     } catch (error) {
         console.error("Error fetching data:", error);

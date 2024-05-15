@@ -1,84 +1,112 @@
-class Task {
-    constructor(
-        id,
-        description,
-        priority,
-        finishDate,
-        creationTime,
-        isDone = false
-    ) {
-        this._id = id;
-        this._description = description;
-        this._priority = parseInt(priority);
-        this._finishDate = new Date(finishDate);
-        this._creationTime = creationTime ? new Date(creationTime) : new Date();
-        this._isDone = isDone;
-    }
+const { sequelize } = require("../../config");
+const {Model, DataTypes} = require("sequelize");
+const {Priority} = require('./Priority');
 
-    get creationTimeAsString() {
-        const currentYear = this._creationTime.getFullYear();
-        const currentMonth = (this._creationTime.getMonth() + 1)
-            .toString()
-            .padStart(2, "0");
-        const currentDay = this._creationTime
-            .getDate()
-            .toString()
-            .padStart(2, "0");
-        const currentHours = this._creationTime
-            .getHours()
-            .toString()
-            .padStart(2, "0");
-        const currentMinutes = this._creationTime
-            .getMinutes()
-            .toString()
-            .padStart(2, "0");
+class Task extends Model {}
 
-        return `${currentDay}.${currentMonth}.${currentYear} ${currentHours}:${currentMinutes}`;
-    }
+Task.init({
+        id: {
+            type: DataTypes.INTEGER,
+            autoIncrement: true,
+            primaryKey: true,
+        },
+        description: {
+            type: DataTypes.STRING,
+            allowNull: false,
+            validate: {
+                notEmpty: {
+                    msg: "Provide description, please"
+                },
+            },
+        },
+        priorityId: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            references: {
+                model: Priority,
+                key: 'id',
+            },
+        },
+        finishDate: {
+            type: DataTypes.DATEONLY,
+            allowNull: false,
+            validate: {
+                isGreaterThanToday(value) {
+                    if (new Date(value) <= new Date()) {
+                        throw new Error('Finish date must be greater than today');
+                    }
+                }
+            }
+        },
+        isDone: {
+            allowNull: false,
+            defaultValue: false,
+            type: DataTypes.BOOLEAN,
+        },
+        creationTimeAsString: {
+            type: DataTypes.VIRTUAL,
+            get() {
+                if(!this.updatedAt)
+                    return;
 
-    get id() {
-        return this._id;
-    }
+                const currentYear = this.updatedAt.getFullYear();
+                const currentMonth = (this.updatedAt.getMonth() + 1)
+                    .toString()
+                    .padStart(2, "0");
+                const currentDay = this.updatedAt
+                    .getDate()
+                    .toString()
+                    .padStart(2, "0");
+                const currentHours = this.updatedAt
+                    .getHours()
+                    .toString()
+                    .padStart(2, "0");
+                const currentMinutes = this.updatedAt
+                    .getMinutes()
+                    .toString()
+                    .padStart(2, "0");
 
-    get creationTime() {
-        return this._creationTime;
-    }
+                return `${currentDay}.${currentMonth}.${currentYear} ${currentHours}:${currentMinutes}`;
+            },
+        },
+        finishDateAsString:
+            {
+                type: DataTypes.VIRTUAL,
+                get() {
+                    if(!this.finishDate)
+                        return;
 
-    get priority() {
-        return this._priority;
-    }
+                    const finishDate = new Date(this.finishDate);
 
-    get priorityAsString() {
-        if (this._priority === 1) return "High";
-        if (this._priority === 2) return "Medium";
-        if (this._priority === 3) return "Low";
-    }
+                    const currentYear = finishDate.getFullYear();
+                    const currentMonth = (finishDate.getMonth() + 1)
+                        .toString()
+                        .padStart(2, "0");
+                    const currentDay = finishDate
+                        .getDate()
+                        .toString()
+                        .padStart(2, "0");
 
-    get description() {
-        return this._description;
-    }
+                    return `${currentDay}.${currentMonth}.${currentYear}`;
+                }
+        }
+    },
+    {
+        sequelize,
+        tableName: 'tasks',
+        modelName: 'Task',
+    },
+)
 
-    get isDone() {
-        return this._isDone;
-    }
+Priority.hasMany(Task, { foreignKey: 'priorityId' });
+Task.belongsTo(Priority, { foreignKey: 'priorityId' });
 
-    get finishDateAsString() {
-        const currentYear = this._finishDate.getFullYear();
-        const currentMonth = (this._finishDate.getMonth() + 1)
-            .toString()
-            .padStart(2, "0");
-        const currentDay = this._finishDate
-            .getDate()
-            .toString()
-            .padStart(2, "0");
-
-        return `${currentDay}.${currentMonth}.${currentYear}`;
-    }
-
-    get finishDate() {
-        return this._finishDate;
-    }
+async function synchronize() {
+    // await sequelize.sync({ force: true })
+    await Task.sync({alter: true});
 }
+
+synchronize();
 
 if (typeof module !== "undefined" && typeof module.exports !== "undefined")
     module.exports = { Task };

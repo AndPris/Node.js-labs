@@ -1,22 +1,35 @@
 require("dotenv").config();
-const pg = require("pg");
-const { Pool } = pg;
+const { Sequelize } = require('sequelize');
 
-const config = {
-    user: process.env.USER,
+const sequelize = new Sequelize({
+    username: process.env.USER,
     password: process.env.PASSWORD,
+    database: process.env.DATABASE,
     host: process.env.HOST,
     port: process.env.DBPORT,
-    database: process.env.DATABASE,
-    ssl: {
-        rejectUnauthorized: process.env.REJECTUNAUTHORIZED,
-        ca: process.env.CA,
+    dialect: "postgres",
+    dialectOptions: {
+        ssl: {
+            rejectUnauthorized: process.env.REJECTUNAUTHORIZED === "true",
+            ca: process.env.CA ? process.env.CA : undefined,
+        },
     },
-    max: process.env.MAX,
-    idleTimeoutMillis: process.env.IDLETIMEOUTMILLS,
-    connectionTimeoutMillis: process.env.CONNECTIONTIMEOUTMILLIS,
-};
+    pool: {
+        max: parseInt(process.env.MAX, 10),
+        idle: parseInt(process.env.IDLETIMEOUTMILLS, 10),
+        acquire: parseInt(process.env.CONNECTIONTIMEOUTMILLIS, 10),
+    },
+});
 
-const pool = new Pool(config);
+async function testConnection() {
+    try {
+        await sequelize.authenticate();
+        console.log('Connection has been established successfully.');
+    } catch (error) {
+        console.error('Unable to connect to the database:', error);
+    }
+}
 
-module.exports = pool
+testConnection();
+
+module.exports = {sequelize};
