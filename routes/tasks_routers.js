@@ -9,7 +9,7 @@ router.post("/", async (req, res) => {
     try {
         await Task.create({description: req.body.description, priorityId: req.body.priority, finishDate: req.body.finishDate});
 
-        res.json({redirect: "/tasks"});
+        res.status(201).json({redirect: "/tasks"});
     } catch (err) {
         console.log(err);
         res.status(500).json({ error: 'Internal server error' });
@@ -24,7 +24,7 @@ router.get("/", async (req, res) => {
             const month = String(today.getMonth() + 1).padStart(2, '0');
             const day = String(today.getDate()).padStart(2, '0');
             const currentDate = `${year}-${month}-${day}`;
-            res.render("index", {title: "ToDo", currentPage: req.path, currentDate: currentDate});
+            res.status(200).render("index", {title: "ToDo", currentPage: req.path, currentDate: currentDate});
             return;
         }
 
@@ -68,18 +68,29 @@ router.get("/", async (req, res) => {
 
 
 router.delete("/:taskId", async (req, res) => {
-    await Task.destroy(
-        { where: { id: req.params.taskId, }, },
-    );
-    res.json({ redirect: "/tasks" });
+    try {
+        await Task.destroy(
+            { where: { id: req.params.taskId, }, },
+        );
+        res.status(200).json({ redirect: "/tasks" });
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+
 });
 
 router.patch("/:taskId", async (req, res) => {
-    await Task.update(
-        { isDone: Sequelize.literal('NOT "isDone"') },
-        { where: { id: req.params.taskId, }, },
-    );
-    res.json({ redirect: "/tasks" });
+    try {
+        await Task.update(
+            { isDone: Sequelize.literal('NOT "isDone"') },
+            { where: { id: req.params.taskId, }, },
+        );
+        res.json({ redirect: "/tasks" });
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
 });
 
 
@@ -95,14 +106,14 @@ router.put("/:taskId", async (req, res) => {
 
         await transaction.commit();
 
-        res.json({ redirect: "/tasks" });
+        res.status(200).json({ redirect: "/tasks" });
     } catch (e) {
         await transaction.rollback();
         console.error('Error in transaction', e);
 
         let errorMessage = e.message ? e.message : "Unexpected error!";
 
-        res.json({ error_message: errorMessage });
+        res.status(400).json({ error_message: errorMessage });
     }
 });
 

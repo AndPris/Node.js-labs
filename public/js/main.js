@@ -98,7 +98,7 @@ async function editTaskInDB(event) {
             body: formData,
         });
 
-        if (!response.ok) throw new Error("Network response was not ok");
+        // if (!response.ok) throw new Error("Network response was not ok");
 
         const responseData = await response.json();
         if (responseData.redirect)
