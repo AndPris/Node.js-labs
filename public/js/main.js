@@ -211,17 +211,23 @@ function displayTask(task) {
 
 async function loadTasks(sortOrders) {
     try {
-        const queryString = `?sortOrders=${encodeURIComponent(JSON.stringify(sortOrders || []))}`;
+        const queryString = `?sortOrders=${encodeURIComponent(JSON.stringify(sortOrders || []))}&page=${currentPage}&pageSize=${itemsInPage}`;
         const response = await fetch("/tasks" + queryString, {
             method: "GET",
             headers: {
                 "LoadTasks": "true"
             }
         })
-        const todos = await response.json();
-        todos.forEach((todo) => {
+        clearChildren(".todo-list");
+        const data = await response.json();
+        data.tasks.forEach((todo) => {
             displayTask(todo);
         });
+
+        //todo: disable button if there is no tasks
+        console.log(data.isTasksLeft)
+        if(!data.isTasksLeft)
+            document.getElementById("forward-button").style.display = 'none';
     } catch (error) {
         console.error("Error fetching data:", error);
     }
@@ -321,20 +327,10 @@ async function fetchTasks(page, pageSize) {
     }
 }
 
-// Function to handle pagination controls
-async function handlePagination(page) {
-    const pageSize = 5; // Define the page size
-    const tasks = await fetchTasks(page, pageSize);
-
-    clearChildren(".todo-list");
-    tasks.forEach((task) => {
-        displayTask(task);
-    });
-}
 
 function goForward() {
-    const tasksAmount =
-    if ()
+    currentPage += 1;
+    loadTasks(currentPage, itemsInPage)
 }
 
 function goBackward() {
@@ -342,16 +338,3 @@ function goBackward() {
         return;
 }
 
-// Example usage:
-const nextPageButton = document.getElementById("nextPageButton");
-const prevPageButton = document.getElementById("prevPageButton");
-
-nextPageButton.addEventListener("click", () => {
-    // Handle next page button click
-    handlePagination(currentPage + 1);
-});
-
-prevPageButton.addEventListener("click", () => {
-    // Handle previous page button click
-    handlePagination(currentPage - 1);
-});

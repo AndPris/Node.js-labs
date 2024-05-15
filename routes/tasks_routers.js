@@ -30,6 +30,9 @@ router.get("/", async (req, res) => {
 
         const sortOrders = JSON.parse(req.query.sortOrders);
         const order = [];
+        const page = parseInt(req.query.page) || 0;
+        const pageSize = parseInt(req.query.pageSize) || 5;
+        const offset = page * pageSize;
 
         sortOrders.forEach((sortOrder) => {
             if (sortOrder[1] === 0) return;
@@ -52,13 +55,21 @@ router.get("/", async (req, res) => {
         }
 
         const tasks = await Task.findAll({
+            offset,
+            limit: pageSize,
             include: {
                 model: Priority,
             },
             order
         });
-        res.status(200).json(tasks);
 
+        const totalTasks = await Task.count();
+        const tasksRemaining = totalTasks - offset - pageSize;
+
+        res.status(200).json({
+            tasks,
+            isTasksLeft: tasksRemaining > 0
+        });
     } catch (err) {
         console.log(err);
         res.status(500).json({ error: 'Internal server error' });
