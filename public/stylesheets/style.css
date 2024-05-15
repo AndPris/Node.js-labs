@@ -149,6 +149,14 @@ form input {
   border-top-left-radius: 0;
 }
 
+#backward-button {
+  margin-right: 5px;
+}
+
+#forward-button {
+  margin-left: 5px;
+}
+
 form input.standard-input, #descriptionToFind {
   background-color: #181a1a;
   color: rgb(247, 226, 223);

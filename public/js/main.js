@@ -1,4 +1,6 @@
 const toDoList = document.querySelector(".todo-list");
+let currentPage = 0;
+const itemsInPage = 5;
 
 async function addTaskToDB(event) {
     event.preventDefault();
@@ -301,3 +303,55 @@ async function findTask() {
         console.error("Error fetching data:", error);
     }
 }
+
+
+
+
+// Function to fetch tasks for a specific page
+async function fetchTasks(page, pageSize) {
+    try {
+        const response = await fetch(`/tasks?page=${page}&pageSize=${pageSize}`);
+        if (!response.ok) {
+            throw new Error("Network response was not ok");
+        }
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+// Function to handle pagination controls
+async function handlePagination(page) {
+    const pageSize = 5; // Define the page size
+    const tasks = await fetchTasks(page, pageSize);
+
+    clearChildren(".todo-list");
+    tasks.forEach((task) => {
+        displayTask(task);
+    });
+}
+
+function goForward() {
+    const tasksAmount =
+    if ()
+}
+
+function goBackward() {
+    if (currentPage === 0)
+        return;
+}
+
+// Example usage:
+const nextPageButton = document.getElementById("nextPageButton");
+const prevPageButton = document.getElementById("prevPageButton");
+
+nextPageButton.addEventListener("click", () => {
+    // Handle next page button click
+    handlePagination(currentPage + 1);
+});
+
+prevPageButton.addEventListener("click", () => {
+    // Handle previous page button click
+    handlePagination(currentPage - 1);
+});
