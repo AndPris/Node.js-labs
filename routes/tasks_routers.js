@@ -57,7 +57,7 @@ router.get("/", async (req, res) => {
             },
             order
         });
-        res.json(tasks);
+        res.status(200).json(tasks);
 
     } catch (err) {
         console.log(err);
@@ -65,6 +65,23 @@ router.get("/", async (req, res) => {
     }
 });
 
+router.get("/:description", async (req, res) => {
+    try {
+        const tasks = await Task.findAll({
+            where: {
+                description: req.params.description
+            },
+            include: {
+                model: Priority,
+            },
+        });
+        res.status(200).json(tasks);
+
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
 
 
 router.delete("/:taskId", async (req, res) => {

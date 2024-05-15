@@ -98,8 +98,6 @@ async function editTaskInDB(event) {
             body: formData,
         });
 
-        // if (!response.ok) throw new Error("Network response was not ok");
-
         const responseData = await response.json();
         if (responseData.redirect)
             window.location.href = responseData.redirect;
@@ -271,4 +269,35 @@ function sortTasksByFinishDate() {
         buttonText += " ↑";
 
     button.textContent = buttonText;
+}
+
+
+async function findTask() {
+    prioritySortOrder = 0;
+    finishDateSortOrder = 0;
+    document.getElementById("priority-sort-button").textContent = "By priority"
+    document.getElementById("finish-date-sort-button").textContent = "By finish date"
+    try {
+        const description = document.getElementById("descriptionToFind");
+
+        if (!description.value) {
+            clearChildren(".todo-list");
+            await loadTasks();
+            return;
+        }
+        const response = await fetch(`/tasks/${description.value}`, {
+            method: "GET",
+        });
+
+        description.value = "";
+
+        clearChildren(".todo-list");
+
+        const todos = await response.json();
+        todos.forEach((todo) => {
+            displayTask(todo);
+        });
+    } catch (error) {
+        console.error("Error fetching data:", error);
+    }
 }

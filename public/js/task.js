@@ -32,8 +32,8 @@ Task.init({
             allowNull: false,
             validate: {
                 isGreaterThanToday(value) {
-                    if (new Date(value) <= new Date()) {
-                        throw new Error('Finish date must be greater than today');
+                    if ((new Date(value)).getDate() < (new Date()).getDate()) {
+                        throw new Error('Finish date must not be less than today');
                     }
                 }
             }
