@@ -54,12 +54,8 @@ async function deleteTask() {
     const taskId = todoElement.getAttribute("id");
 
     try {
-        let response = await fetch("/tasks", {
+        let response = await fetch(`/tasks/${taskId}`, {
             method: "DELETE",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ taskId: taskId }),
         });
 
         if (!response.ok) throw new Error("Network response was not ok");
@@ -76,12 +72,8 @@ async function checkTask() {
     const taskId = todoElement.getAttribute("id");
 
     try {
-        let response = await fetch("/tasks", {
+        let response = await fetch(`/tasks/${taskId}`, {
             method: "PATCH",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ taskId: taskId }),
         });
 
         if (!response.ok) throw new Error("Network response was not ok");
@@ -98,10 +90,10 @@ async function editTaskInDB(event) {
     event.preventDefault();
 
     const formData = new FormData(this);
-    formData.set("taskId", this.getAttribute("task-id"));
+    const taskId = this.getAttribute("task-id");
 
     try {
-        let response = await fetch("/tasks", {
+        let response = await fetch(`/tasks/${taskId}`, {
             method: "PUT",
             body: formData,
         });
@@ -227,7 +219,6 @@ async function loadTasks(sortOrders) {
             }
         })
         const todos = await response.json();
-        console.log(todos);
         todos.forEach((todo) => {
             displayTask(todo);
         });

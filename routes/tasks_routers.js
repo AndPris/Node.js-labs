@@ -67,29 +67,29 @@ router.get("/", async (req, res) => {
 
 
 
-router.delete("/", async (req, res) => {
+router.delete("/:taskId", async (req, res) => {
     await Task.destroy(
-        { where: { id: req.body.taskId, }, },
+        { where: { id: req.params.taskId, }, },
     );
     res.json({ redirect: "/tasks" });
 });
 
-router.patch("/", async (req, res) => {
+router.patch("/:taskId", async (req, res) => {
     await Task.update(
         { isDone: Sequelize.literal('NOT "isDone"') },
-        { where: { id: req.body.taskId, }, },
+        { where: { id: req.params.taskId, }, },
     );
     res.json({ redirect: "/tasks" });
 });
 
 
-router.put("/", async (req, res) => {
+router.put("/:taskId", async (req, res) => {
     const transaction = await sequelize.transaction();
 
     try {
         await Task.update(
             { description: req.body.description, priorityId: req.body.priority, finishDate: req.body.finishDate},
-            { where: { id: req.body.taskId, }, },
+            { where: { id: req.params.taskId, }, },
             {transaction: transaction},
         );
 
