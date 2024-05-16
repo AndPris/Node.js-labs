@@ -1,6 +1,11 @@
 const toDoList = document.querySelector(".todo-list");
 let currentPage = 0;
 const itemsInPage = 5;
+let sortOrders= [];
+let descriptionToFind = '';
+let prioritySortOrder = 0;
+let finishDateSortOrder = 0;
+
 
 async function addTaskToDB(event) {
     event.preventDefault();
@@ -209,36 +214,42 @@ function displayTask(task) {
     toDoList.appendChild(taskLi);
 }
 
-async function loadTasks(sortOrders) {
+
+function updatePaginationButtons(areTasksLeft) {
+    if(currentPage === 0)
+        document.getElementById("backward-button").style.display = 'none';
+    else
+        document.getElementById("backward-button").style.display = '';
+
+    if(areTasksLeft)
+        document.getElementById("forward-button").style.display = '';
+    else
+        document.getElementById("forward-button").style.display = 'none';
+}
+
+async function loadTasks() {
     try {
-        const queryString = `?sortOrders=${encodeURIComponent(JSON.stringify(sortOrders || []))}&page=${currentPage}&pageSize=${itemsInPage}`;
+        console.log(descriptionToFind);
+        const queryString = `?sortOrders=${encodeURIComponent(JSON.stringify(sortOrders))}&page=${currentPage}&pageSize=${itemsInPage}&description=${descriptionToFind}`;
         const response = await fetch("/tasks" + queryString, {
             method: "GET",
             headers: {
                 "LoadTasks": "true"
             }
         })
+
         clearChildren(".todo-list");
         const data = await response.json();
         data.tasks.forEach((todo) => {
             displayTask(todo);
         });
-
-        //todo: disable button if there is no tasks
-        console.log(data.isTasksLeft)
-        if(!data.isTasksLeft)
-            document.getElementById("forward-button").style.display = 'none';
+        updatePaginationButtons(data.areTasksLeft);
     } catch (error) {
         console.error("Error fetching data:", error);
     }
 }
 
 loadTasks();
-
-
-let prioritySortOrder = 0;
-let finishDateSortOrder = 0;
-
 
 function clearChildren(className) {
     const element = document.querySelector(className);
@@ -249,8 +260,8 @@ function clearChildren(className) {
 
 function sortTasksByPriority() {
     prioritySortOrder = (prioritySortOrder+1) % 3;
-    clearChildren('.todo-list');
-    loadTasks([["priority", prioritySortOrder], ["finishDate", finishDateSortOrder]]);
+    sortOrders = [["priority", prioritySortOrder], ["finishDate", finishDateSortOrder]];
+    loadTasks();
 
     const button = document.getElementById("priority-sort-button");
     let buttonText = "By priority";
@@ -265,8 +276,8 @@ function sortTasksByPriority() {
 
 function sortTasksByFinishDate() {
     finishDateSortOrder = (finishDateSortOrder+1) % 3;
-    clearChildren('.todo-list');
-    loadTasks([["finishDate", finishDateSortOrder], ["priority", prioritySortOrder]]);
+    sortOrders = [["finishDate", finishDateSortOrder], ["priority", prioritySortOrder]];
+    loadTasks();
 
     const button = document.getElementById("finish-date-sort-button");
     let buttonText = "By finish date";
@@ -281,60 +292,22 @@ function sortTasksByFinishDate() {
 
 
 async function findTask() {
-    prioritySortOrder = 0;
-    finishDateSortOrder = 0;
-    document.getElementById("priority-sort-button").textContent = "By priority"
-    document.getElementById("finish-date-sort-button").textContent = "By finish date"
-    try {
-        const description = document.getElementById("descriptionToFind");
-
-        if (!description.value) {
-            clearChildren(".todo-list");
-            await loadTasks();
-            return;
-        }
-        const response = await fetch(`/tasks/${description.value}`, {
-            method: "GET",
-        });
-
-        description.value = "";
-
-        clearChildren(".todo-list");
-
-        const todos = await response.json();
-        todos.forEach((todo) => {
-            displayTask(todo);
-        });
-    } catch (error) {
-        console.error("Error fetching data:", error);
-    }
-}
-
-
-
-
-// Function to fetch tasks for a specific page
-async function fetchTasks(page, pageSize) {
-    try {
-        const response = await fetch(`/tasks?page=${page}&pageSize=${pageSize}`);
-        if (!response.ok) {
-            throw new Error("Network response was not ok");
-        }
-        const data = await response.json();
-        return data;
-    } catch (error) {
-        console.error(error);
-    }
+    currentPage = 0;
+    const descriptionField = document.getElementById("descriptionToFind");
+    descriptionToFind = descriptionField.value;
+    console.log(descriptionToFind);
+    await loadTasks();
+    descriptionField.value = '';
 }
 
 
 function goForward() {
     currentPage += 1;
-    loadTasks(currentPage, itemsInPage)
+    loadTasks()
 }
 
 function goBackward() {
-    if (currentPage === 0)
-        return;
+    currentPage -= 1;
+    loadTasks()
 }
 

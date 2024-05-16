@@ -32,9 +32,14 @@ Task.init({
             allowNull: false,
             validate: {
                 isGreaterThanToday(value) {
-                    if ((new Date(value)).getDate() < (new Date()).getDate()) {
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+
+                    const finishDateToAdd = new Date(value);
+                    finishDateToAdd.setHours(0, 0, 0, 0);
+
+                    if (finishDateToAdd < today)
                         throw new Error('Finish date must not be less than today');
-                    }
                 }
             }
         },

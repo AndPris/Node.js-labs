@@ -5,6 +5,33 @@ const {Priority}= require("../public/js/priority");
 const {Sequelize} = require("sequelize");
 const {sequelize} = require("../config");
 
+
+function getSortOrder(sortOrders) {
+    let order = [];
+
+    sortOrders.forEach((sortOrder) => {
+        if (sortOrder[1] === 0) return;
+
+        let column;
+        if (sortOrder[0] === "priority") {
+            column = 'priorityId';
+        } else if (sortOrder[0] === "finishDate") {
+            column = 'finishDate';
+        } else {
+            return;
+        }
+
+        const direction = sortOrder[1] === 1 ? 'ASC' : 'DESC';
+        order.push([column, direction]);
+    });
+
+    if (order.length === 0)
+        order.push(['isDone', 'ASC']);
+
+    return order;
+}
+
+
 router.post("/", async (req, res) => {
     try {
         await Task.create({description: req.body.description, priorityId: req.body.priority, finishDate: req.body.finishDate});
@@ -29,30 +56,12 @@ router.get("/", async (req, res) => {
         }
 
         const sortOrders = JSON.parse(req.query.sortOrders);
-        const order = [];
+        const order = getSortOrder(sortOrders);
         const page = parseInt(req.query.page) || 0;
         const pageSize = parseInt(req.query.pageSize) || 5;
         const offset = page * pageSize;
 
-        sortOrders.forEach((sortOrder) => {
-            if (sortOrder[1] === 0) return;
-
-            let column;
-            if (sortOrder[0] === "priority") {
-                column = 'priorityId';
-            } else if (sortOrder[0] === "finishDate") {
-                column = 'finishDate';
-            } else {
-                return;
-            }
-
-            const direction = sortOrder[1] === 1 ? 'ASC' : 'DESC';
-            order.push([column, direction]);
-        });
-
-        if (order.length === 0) {
-            order.push(['isDone', 'ASC']);
-        }
+        console.log(req.query.description);
 
         const tasks = await Task.findAll({
             offset,
@@ -60,34 +69,19 @@ router.get("/", async (req, res) => {
             include: {
                 model: Priority,
             },
+            where: req.query.description ? { description: req.query.description } : {},
             order
         });
 
-        const totalTasks = await Task.count();
+        const totalTasks = await Task.count({
+            where: req.query.description ? { description: req.query.description } : {}
+        });
         const tasksRemaining = totalTasks - offset - pageSize;
 
         res.status(200).json({
             tasks,
-            isTasksLeft: tasksRemaining > 0
+            areTasksLeft: tasksRemaining > 0
         });
-    } catch (err) {
-        console.log(err);
-        res.status(500).json({ error: 'Internal server error' });
-    }
-});
-
-router.get("/:description", async (req, res) => {
-    try {
-        const tasks = await Task.findAll({
-            where: {
-                description: req.params.description
-            },
-            include: {
-                model: Priority,
-            },
-        });
-        res.status(200).json(tasks);
-
     } catch (err) {
         console.log(err);
         res.status(500).json({ error: 'Internal server error' });
