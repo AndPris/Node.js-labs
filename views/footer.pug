@@ -1,4 +1,7 @@
 section.footer
+  div.pagButtons
+    button#backward-button.sort-button.standard-button(onclick="goBackward()") <
+    button#forward-button.sort-button.standard-button(onclick="goForward()") >
   ul.authors-links
     li
       a.author-link.standard-authors-link(href= (currentPage === '/Andrii' ? '/' : '/authors/Andrii'))=(currentPage === '/Andrii' ? 'Home Page' : 'Andrii')
@@ -7,6 +10,3 @@ section.footer
     li
       a.author-link.standard-authors-link(href= (currentPage === '/Max' ? '/' : '/authors/Max'))=(currentPage === '/Max' ? 'Home Page' : 'Max')
 
-  ul.authors-links
-    li
-      a.author-link.standard-authors-link(href='/static') Static HTML page

@@ -27,6 +27,9 @@ block content
         div
             p
         div.sort-buttons
+            div.search
+                input#descriptionToFind.todo-input.standard-input(type="text", placeholder="Find a task.", name="description")
+                button#find-button.sort-button.standard-button(onclick="findTask()") Find
             button#priority-sort-button.sort-button.standard-button(onclick="sortTasksByPriority()") By priority
             button#finish-date-sort-button.sort-button.standard-button(onclick="sortTasksByFinishDate()") By finish date
         #myUnOrdList

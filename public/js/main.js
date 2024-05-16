@@ -1,4 +1,11 @@
 const toDoList = document.querySelector(".todo-list");
+let currentPage = 0;
+const itemsInPage = 5;
+let sortOrders= [];
+let descriptionToFind = '';
+let prioritySortOrder = 0;
+let finishDateSortOrder = 0;
+
 
 async function addTaskToDB(event) {
     event.preventDefault();
@@ -54,12 +61,8 @@ async function deleteTask() {
     const taskId = todoElement.getAttribute("id");
 
     try {
-        let response = await fetch("/tasks", {
+        let response = await fetch(`/tasks/${taskId}`, {
             method: "DELETE",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ taskId: taskId }),
         });
 
         if (!response.ok) throw new Error("Network response was not ok");
@@ -76,12 +79,8 @@ async function checkTask() {
     const taskId = todoElement.getAttribute("id");
 
     try {
-        let response = await fetch("/tasks", {
+        let response = await fetch(`/tasks/${taskId}`, {
             method: "PATCH",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ taskId: taskId }),
         });
 
         if (!response.ok) throw new Error("Network response was not ok");
@@ -98,15 +97,13 @@ async function editTaskInDB(event) {
     event.preventDefault();
 
     const formData = new FormData(this);
-    formData.set("taskId", this.getAttribute("task-id"));
+    const taskId = this.getAttribute("task-id");
 
     try {
-        let response = await fetch("/tasks", {
+        let response = await fetch(`/tasks/${taskId}`, {
             method: "PUT",
             body: formData,
         });
-
-        if (!response.ok) throw new Error("Network response was not ok");
 
         const responseData = await response.json();
         if (responseData.redirect)
@@ -155,7 +152,6 @@ function showEditTaskMenu(taskLiItem) {
 
 async function editTask() {
     showEditTaskMenu(this.closest("li"));
-
 }
 
 
@@ -218,26 +214,42 @@ function displayTask(task) {
     toDoList.appendChild(taskLi);
 }
 
-async function loadTasks(sortOrders) {
+
+function updatePaginationButtons(areTasksLeft) {
+    if(currentPage === 0)
+        document.getElementById("backward-button").style.display = 'none';
+    else
+        document.getElementById("backward-button").style.display = '';
+
+    if(areTasksLeft)
+        document.getElementById("forward-button").style.display = '';
+    else
+        document.getElementById("forward-button").style.display = 'none';
+}
+
+async function loadTasks() {
     try {
-        const queryString = `?sortOrders=${encodeURIComponent(JSON.stringify(sortOrders || []))}`;
-        const response = await fetch("/tasks" + queryString)
-        const todos = await response.json();
-        console.log(todos);
-        todos.forEach((todo) => {
+        console.log(descriptionToFind);
+        const queryString = `?sortOrders=${encodeURIComponent(JSON.stringify(sortOrders))}&page=${currentPage}&pageSize=${itemsInPage}&description=${descriptionToFind}`;
+        const response = await fetch("/tasks" + queryString, {
+            method: "GET",
+            headers: {
+                "LoadTasks": "true"
+            }
+        })
+
+        clearChildren(".todo-list");
+        const data = await response.json();
+        data.tasks.forEach((todo) => {
             displayTask(todo);
         });
+        updatePaginationButtons(data.areTasksLeft);
     } catch (error) {
         console.error("Error fetching data:", error);
     }
 }
 
 loadTasks();
-
-
-let prioritySortOrder = 0;
-let finishDateSortOrder = 0;
-
 
 function clearChildren(className) {
     const element = document.querySelector(className);
@@ -248,8 +260,8 @@ function clearChildren(className) {
 
 function sortTasksByPriority() {
     prioritySortOrder = (prioritySortOrder+1) % 3;
-    clearChildren('.todo-list');
-    loadTasks([["priority", prioritySortOrder], ["finishDate", finishDateSortOrder]]);
+    sortOrders = [["priority", prioritySortOrder], ["finishDate", finishDateSortOrder]];
+    loadTasks();
 
     const button = document.getElementById("priority-sort-button");
     let buttonText = "By priority";
@@ -264,8 +276,8 @@ function sortTasksByPriority() {
 
 function sortTasksByFinishDate() {
     finishDateSortOrder = (finishDateSortOrder+1) % 3;
-    clearChildren('.todo-list');
-    loadTasks([["finishDate", finishDateSortOrder], ["priority", prioritySortOrder]]);
+    sortOrders = [["finishDate", finishDateSortOrder], ["priority", prioritySortOrder]];
+    loadTasks();
 
     const button = document.getElementById("finish-date-sort-button");
     let buttonText = "By finish date";
@@ -277,3 +289,25 @@ function sortTasksByFinishDate() {
 
     button.textContent = buttonText;
 }
+
+
+async function findTask() {
+    currentPage = 0;
+    const descriptionField = document.getElementById("descriptionToFind");
+    descriptionToFind = descriptionField.value;
+    console.log(descriptionToFind);
+    await loadTasks();
+    descriptionField.value = '';
+}
+
+
+function goForward() {
+    currentPage += 1;
+    loadTasks()
+}
+
+function goBackward() {
+    currentPage -= 1;
+    loadTasks()
+}
+

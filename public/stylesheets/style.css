@@ -130,18 +130,44 @@ form input {
   width: 100%;
 }
 
-/* Input themes */
-form input.standard-input {
+#descriptionToFind {
+  padding: 10px;
+  font-size: 17px;
+  border: none;
+  outline: none;
+  border-top-left-radius: 17px;
+  border-bottom-left-radius: 17px;
+  transition: background-color 200ms ease-in-out;
+}
+
+.search {
+  display: flex;
+}
+
+#find-button {
+  border-bottom-left-radius: 0;
+  border-top-left-radius: 0;
+}
+
+#backward-button {
+  margin-right: 5px;
+}
+
+#forward-button {
+  margin-left: 5px;
+}
+
+form input.standard-input, #descriptionToFind {
   background-color: #181a1a;
   color: rgb(247, 226, 223);
   border-right: 2px solid white;
 }
 
-form input:hover {
+form input:hover, #descriptionToFind:hover {
   cursor: text;
 }
 
-form input.standard-input:hover {
+form input.standard-input:hover, #descriptionToFind:hover {
   background-color: rgb(0, 0, 0);
 }
 
